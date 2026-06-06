@@ -2,7 +2,7 @@
 
 > A gorgeous animated liquid-metaball background for your website — in **one line of code**.
 
-[Live demo](https://blobs.vercel.app) · zero dependencies · MIT
+[Live demo & customizer](https://blobs-playground.vercel.app) · zero dependencies · MIT
 
 ![blobs](./assets/hero.png)
 
@@ -40,7 +40,7 @@ Example:
 <metaball-bg preset="jelly" blobs="12" color1="#ff8a3d" color2="#3d6bff"></metaball-bg>
 ```
 
-Don't want to write HTML? Use the [playground](https://blobs.vercel.app) to tweak it visually and copy the snippet.
+Don't want to write HTML? Use the [playground](https://blobs-playground.vercel.app) to tweak it visually and copy the snippet.
 
 ## Why it won't slow your site down
 
