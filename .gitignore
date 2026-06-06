@@ -1,0 +1,6 @@
+node_modules
+site-dist
+.DS_Store
+.vercel
+verify*.mjs
+verify*.png

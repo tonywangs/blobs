@@ -1,0 +1,19 @@
+{
+  "name": "blobs",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Drop-in animated metaball background as a one-line web component.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:site": "vite build --config vite.playground.config.js",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "three": "^0.169.0"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0"
+  }
+}
