@@ -176,7 +176,7 @@ class MetaballBg extends HTMLElement {
 
     this._scene = new THREE.Scene();
     this._camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 100);
-    this._camera.position.set(0, 0, 4.4); // pulled back so the blob never clips the edges
+    this._camera.position.set(0, 0, 5.6); // pulled back so the blob always has margin and never clips
 
     this._buildEnv();
 
