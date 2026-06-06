@@ -150,11 +150,11 @@ class MetaballBg extends HTMLElement {
       preset: PRESETS[presetName] || PRESETS.chrome,
       blobs: clamp(parseInt(this.getAttribute('blobs'), 10) || 9, 1, 16),
       speed: numAttr(this.getAttribute('speed'), 1.0),
-      bg: this.getAttribute('bg') || '#0a0a0a',
+      bg: this.getAttribute('bg') || 'transparent',
       quality: [32, 48, 64].includes(q) ? q : 64,
       color1: this.getAttribute('color1') || '#64ffda',
       color2: this.getAttribute('color2') || '#ff64da',
-      spread: 0.19, isolation: 45, strength: 1.5, subtract: 12,
+      spread: 0.15, isolation: 45, strength: 1.5, subtract: 12,
     };
   }
 
@@ -171,10 +171,12 @@ class MetaballBg extends HTMLElement {
     renderer.setSize(w, h, false);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.12;
+    this._transparent = transparent;
+    if (transparent) renderer.setClearColor(0x000000, 0);
 
     this._scene = new THREE.Scene();
     this._camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 100);
-    this._camera.position.set(0, 0, 3.9);
+    this._camera.position.set(0, 0, 4.4); // pulled back so the blob never clips the edges
 
     this._buildEnv();
 
@@ -183,19 +185,29 @@ class MetaballBg extends HTMLElement {
     this._buildBlobs();
     this._applyConfig();
 
-    this._composer = new EffectComposer(renderer);
-    this._composer.addPass(new RenderPass(this._scene, this._camera));
-    this._bloom = new UnrealBloomPass(new THREE.Vector2(w, h), 0.5, 0.5, 0.85);
-    this._composer.addPass(this._bloom);
-    this._composer.addPass(new OutputPass());
-    this._composer.setSize(w, h);
+    // Bloom can't preserve a transparent background (the composer re-fills it opaque),
+    // so it's only used for solid-bg embeds. Transparent embeds render directly — and
+    // since transparent is the default, that's the common path.
+    if (!transparent) {
+      this._composer = new EffectComposer(renderer);
+      this._composer.addPass(new RenderPass(this._scene, this._camera));
+      this._bloom = new UnrealBloomPass(new THREE.Vector2(w, h), 0.5, 0.5, 0.85);
+      this._composer.addPass(this._bloom);
+      this._composer.addPass(new OutputPass());
+      this._composer.setSize(w, h);
+    }
 
     this._clock = new THREE.Clock();
     this._t = 0;
 
     // render one immediate frame so it's never blank (and is the only frame if reduced-motion)
     this._update(0);
-    this._composer.render();
+    this._render();
+  }
+
+  _render() {
+    if (this._composer) this._composer.render();
+    else this._renderer.render(this._scene, this._camera);
   }
 
   _buildEnv() {
@@ -206,7 +218,7 @@ class MetaballBg extends HTMLElement {
     this._scene.environment = env;
     tex.dispose();
     pmrem.dispose();
-    if (this._reduced && this._composer) this._composer.render();
+    if (this._reduced) this._render();
   }
 
   _buildBlobs() {
@@ -236,7 +248,7 @@ class MetaballBg extends HTMLElement {
       this._bloom.threshold = p.bloomThreshold;
     }
     if (this._scene) this._scene.background = cfg.bg === 'transparent' ? null : new THREE.Color(cfg.bg);
-    if (this._reduced && this._composer) this._composer.render();
+    if (this._reduced) this._render();
   }
 
   _update(t) {
@@ -263,7 +275,7 @@ class MetaballBg extends HTMLElement {
       this._raf = requestAnimationFrame(loop);
       this._t += this._clock.getDelta() * this._cfg.speed;
       this._update(this._t);
-      this._composer.render();
+      this._render();
     };
     this._raf = requestAnimationFrame(loop);
   }
@@ -279,8 +291,8 @@ class MetaballBg extends HTMLElement {
     this._camera.aspect = w / h;
     this._camera.updateProjectionMatrix();
     this._renderer.setSize(w, h, false);
-    this._composer.setSize(w, h);
-    if (this._reduced) this._composer.render();
+    if (this._composer) this._composer.setSize(w, h);
+    if (this._reduced) this._render();
   }
 
   _dispose() {
