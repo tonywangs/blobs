@@ -145,12 +145,15 @@ class MetaballBg extends HTMLElement {
 
   _config() {
     const presetName = (this.getAttribute('preset') || 'chrome').toLowerCase();
+    const preset = PRESETS[presetName] || PRESETS.chrome;
     const q = parseInt(this.getAttribute('quality'), 10);
     return {
-      preset: PRESETS[presetName] || PRESETS.chrome,
+      preset,
       blobs: clamp(parseInt(this.getAttribute('blobs'), 10) || 9, 1, 16),
       speed: numAttr(this.getAttribute('speed'), 1.0),
-      bg: this.getAttribute('bg') || 'transparent',
+      // transmissive presets (glass/jelly) need an opaque backdrop to refract, or they
+      // blow out to white; reflective chrome stays transparent so it floats over a page.
+      bg: this.getAttribute('bg') || (preset.transmission > 0 ? '#0a0a0a' : 'transparent'),
       quality: [32, 48, 64].includes(q) ? q : 64,
       color1: this.getAttribute('color1') || '#64ffda',
       color2: this.getAttribute('color2') || '#ff64da',
