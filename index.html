@@ -4,40 +4,38 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>blobs — liquid metaballs for your website, in one line</title>
-  <meta name="description" content="Drop a gorgeous animated liquid-metaball background onto your website with a single line of code." />
+  <meta name="description" content="Drop a gorgeous animated liquid-metaball onto your website with a single line of code." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
   <style>
-    :root {
-      --teal: #64ffda;
-      --magenta: #ff64da;
-      --mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
-    }
+    :root { --teal: #64ffda; --magenta: #ff64da; --mono: 'JetBrains Mono', ui-monospace, Consolas, monospace; }
     * { box-sizing: border-box; }
     html { background: #0a0a0a; }
-    body { margin: 0; background: transparent; color: #d8d8d8; font-family: var(--mono);
+    body { margin: 0; background: #0a0a0a; color: #d8d8d8; font-family: var(--mono);
       min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
 
-    .panel {
-      width: 100%; max-width: 460px;
-      background: rgba(10, 10, 12, 0.62); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-      border: 1px solid rgba(100, 255, 218, 0.22); border-radius: 16px;
-      padding: 28px 26px 22px; box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
-    }
+    .app { width: 100%; max-width: 1000px; display: flex; gap: 26px; align-items: stretch; }
 
-    h1 { margin: 0; font-size: 40px; font-weight: 700; letter-spacing: -0.02em;
+    /* the blob — front and center, fully visible */
+    .preview { flex: 1.15; min-height: 500px; border-radius: 18px; overflow: hidden;
+      border: 1px solid rgba(100, 255, 218, 0.18); box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5); }
+    .preview metaball-bg { display: block; width: 100%; height: 100%; }
+
+    .panel { flex: 0 0 372px; background: rgba(14, 14, 17, 0.92);
+      border: 1px solid rgba(100, 255, 218, 0.18); border-radius: 16px; padding: 26px 24px 20px; }
+
+    h1 { margin: 0; font-size: 38px; font-weight: 700; letter-spacing: -0.02em;
       background: linear-gradient(45deg, var(--teal), var(--magenta));
       -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
     .tag { margin: 6px 0 22px; font-size: 12.5px; line-height: 1.5; color: #8a8a8a; }
 
     .controls { display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; }
     .row { display: flex; align-items: center; gap: 12px; }
-    .label { flex: 0 0 52px; font-size: 11px; color: #9a9a9a; text-transform: lowercase; }
+    .label { flex: 0 0 52px; font-size: 11px; color: #9a9a9a; }
     .presets { display: flex; gap: 6px; }
-    .presets button {
-      font-family: var(--mono); font-size: 11px; padding: 5px 12px; cursor: pointer;
-      background: rgba(255, 255, 255, 0.04); color: #aaa;
-      border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 999px; transition: all 0.2s ease; }
+    .presets button { font-family: var(--mono); font-size: 11px; padding: 5px 12px; cursor: pointer;
+      background: rgba(255, 255, 255, 0.04); color: #aaa; border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 999px; transition: all 0.2s ease; }
     .presets button:hover { border-color: rgba(100, 255, 218, 0.5); color: #ddd; }
     .presets button.active { color: var(--teal); border-color: var(--teal); background: rgba(100, 255, 218, 0.08); }
     input[type=range] { flex: 1; accent-color: var(--teal); height: 3px; cursor: pointer; }
@@ -64,52 +62,61 @@
     .star:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(100, 255, 218, 0.25); }
     .howto { margin: 16px 0 0; font-size: 10.5px; line-height: 1.6; color: #6a6a6a; }
     .howto code { color: var(--teal); }
+
+    @media (max-width: 860px) {
+      .app { flex-direction: column; }
+      .preview { min-height: 340px; }
+      .panel { flex: 1 1 auto; }
+    }
   </style>
 </head>
 <body>
-  <!-- the page background IS the embed -->
-  <metaball-bg background bg="#0a0a0a" preset="chrome" blobs="9" speed="1" id="blob"></metaball-bg>
-
-  <main class="panel">
-    <h1>blobs</h1>
-    <p class="tag">a gorgeous liquid-metaball background for your website — one line of code. tweak it below and copy.</p>
-
-    <div class="controls">
-      <div class="row">
-        <span class="label">preset</span>
-        <div class="presets" id="presets">
-          <button data-preset="chrome" class="active">chrome</button>
-          <button data-preset="glass">glass</button>
-          <button data-preset="jelly">jelly</button>
-        </div>
-      </div>
-      <label class="row">
-        <span class="label">blobs</span>
-        <input type="range" id="blobs" min="1" max="16" step="1" value="9" />
-        <span class="val" id="blobsVal">9</span>
-      </label>
-      <label class="row">
-        <span class="label">speed</span>
-        <input type="range" id="speed" min="0" max="3" step="0.1" value="1" />
-        <span class="val" id="speedVal">1.0</span>
-      </label>
-      <div class="row">
-        <span class="label">colors</span>
-        <div class="swatches">
-          <input type="color" id="color1" value="#64ffda" title="top color" />
-          <input type="color" id="color2" value="#ff64da" title="bottom color" />
-        </div>
-      </div>
+  <div class="app">
+    <div class="preview">
+      <metaball-bg id="blob" preset="chrome"></metaball-bg>
     </div>
 
-    <div class="snippet">
-      <div class="snippet-head"><span>// paste this into your site</span><button id="copy">copy</button></div>
-      <pre id="code"></pre>
-    </div>
+    <main class="panel">
+      <h1>blobs</h1>
+      <p class="tag">a gorgeous liquid-metaball for your website — one line of code. tweak it and copy.</p>
 
-    <a class="star" id="star" href="https://github.com/tonywangs/blobs" target="_blank" rel="noopener noreferrer">★ star on github</a>
-    <p class="howto">tip: add the <code>background</code> attribute to make it a full-page background — exactly like this page.</p>
-  </main>
+      <div class="controls">
+        <div class="row">
+          <span class="label">preset</span>
+          <div class="presets" id="presets">
+            <button data-preset="chrome" class="active">chrome</button>
+            <button data-preset="glass">glass</button>
+            <button data-preset="jelly">jelly</button>
+          </div>
+        </div>
+        <label class="row">
+          <span class="label">blobs</span>
+          <input type="range" id="blobs" min="1" max="16" step="1" value="9" />
+          <span class="val" id="blobsVal">9</span>
+        </label>
+        <label class="row">
+          <span class="label">speed</span>
+          <input type="range" id="speed" min="0" max="3" step="0.1" value="1" />
+          <span class="val" id="speedVal">1.0</span>
+        </label>
+        <div class="row">
+          <span class="label">colors</span>
+          <div class="swatches">
+            <input type="color" id="color1" value="#64ffda" title="top color" />
+            <input type="color" id="color2" value="#ff64da" title="bottom color" />
+          </div>
+        </div>
+      </div>
+
+      <div class="snippet">
+        <div class="snippet-head"><span>// paste this into your site</span><button id="copy">copy</button></div>
+        <pre id="code"></pre>
+      </div>
+
+      <a class="star" id="star" href="https://github.com/tonywangs/blobs" target="_blank" rel="noopener noreferrer">★ star on github</a>
+      <p class="howto">tip: drop it anywhere — a section, a sidebar, a hero. add the <code>background</code> attribute to make it a fixed full-page background instead.</p>
+    </main>
+  </div>
 
   <script type="module" src="/src/blobs.js"></script>
   <script type="module" src="/src/playground.js"></script>
