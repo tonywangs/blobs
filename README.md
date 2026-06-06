@@ -11,7 +11,7 @@
 Drop these two lines anywhere in your HTML:
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/tonywangs/blobs@v1/dist/blobs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/tonywangs/blobs@v3/dist/blobs.min.js"></script>
 <metaball-bg></metaball-bg>
 ```
 
@@ -40,7 +40,12 @@ Example:
 <metaball-bg preset="jelly" blobs="12" color1="#ff8a3d" color2="#3d6bff"></metaball-bg>
 ```
 
-Don't want to write HTML? Use the [playground](https://blobs-playground.vercel.app) to tweak it visually and copy the snippet.
+## Two ways to dial it in
+
+Don't want to hand-write attributes? There are two visual tools:
+
+- **[Playground](https://blobs-playground.vercel.app)** (`/`) — pick a preset, nudge a few sliders, copy your one-liner. For grabbing an embed fast.
+- **[Studio](https://blobs.vercel.app)** (`studio/`) — the full control panel: every material, lighting, and bloom parameter, plus orbit + zoom. For serious design work — sculpt a bespoke look, then carry the settings into your embed.
 
 ## Why it won't slow your site down
 
@@ -55,6 +60,12 @@ npm install
 npm run dev         # live customizer playground
 npm run build       # → dist/blobs.min.js   (the embeddable widget)
 npm run build:site  # → site-dist/          (the playground, as a static site)
+```
+
+The **studio** (full control-panel design tool) is its own app:
+
+```bash
+cd studio && npm install && npm run dev
 ```
 
 ## License

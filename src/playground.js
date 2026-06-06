@@ -1,6 +1,6 @@
 // Wires the playground controls to the live background <metaball-bg> and the copy-paste snippet.
 // Note: this URL is a placeholder until the widget is published (e.g. via jsDelivr from the repo).
-const SCRIPT_URL = 'https://cdn.jsdelivr.net/gh/tonywangs/blobs@v1/dist/blobs.min.js';
+const SCRIPT_URL = 'https://cdn.jsdelivr.net/gh/tonywangs/blobs@v3/dist/blobs.min.js';
 
 const DEFAULTS = { color1: '#64ffda', color2: '#ff64da' };
 
