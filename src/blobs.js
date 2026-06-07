@@ -108,7 +108,9 @@ class MetaballBg extends HTMLElement {
     const root = this.attachShadow({ mode: 'open' });
     root.innerHTML = TEMPLATE;
     this._canvas = root.querySelector('canvas');
-    root.querySelector('.credit').href = CREDIT_URL;
+    const credit = root.querySelector('.credit');
+    if (this.hasAttribute('nocredit')) credit.remove();
+    else credit.href = CREDIT_URL;
 
     this._reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
     this._visible = true;
