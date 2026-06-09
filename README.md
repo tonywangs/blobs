@@ -1,6 +1,6 @@
 # 🫧 blobs
 
-> A gorgeous animated liquid-metaball background for your website — in **one line of code**.
+> A high-res animated liquid-metaball background for your website — in **one line of code**.
 
 [Live demo & customizer](https://blobs.vercel.app) · zero dependencies · MIT
 
