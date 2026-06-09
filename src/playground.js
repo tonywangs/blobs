@@ -1,7 +1,7 @@
 // Wires the playground controls to the live <metaball-bg> and the copy-paste snippet.
 // Simple controls are always visible; "more options" reveals the full studio-level set.
 // The snippet emits only settings that differ from the current preset's defaults.
-const SCRIPT_URL = 'https://cdn.jsdelivr.net/gh/tonywangs/blobs@v6/dist/blobs.min.js';
+const SCRIPT_URL = 'https://cdn.jsdelivr.net/gh/tonywangs/blobs@v7/dist/blobs.min.js';
 
 // Per-preset defaults (mirror PRESETS in blobs.js) — used to know what counts as "changed".
 const PRESETS = {

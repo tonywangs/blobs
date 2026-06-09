@@ -5,9 +5,6 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 
-// Where the subtle credit links. Change to a custom domain / repo later.
-const CREDIT_URL = 'https://blobs.vercel.app';
-
 // Same material/bloom recipe as the standalone showcase, exposed as presets.
 // Any of these fields can be overridden per-instance with the matching attribute.
 const PRESETS = {
@@ -89,15 +86,7 @@ const TEMPLATE = `
   :host { display: block; position: relative; width: 100%; height: 100%; min-height: 280px; overflow: hidden; }
   :host([background]) { position: fixed; inset: 0; width: 100vw; height: 100vh; min-height: 0; z-index: -1; pointer-events: none; }
   canvas { display: block; width: 100%; height: 100%; }
-  .credit {
-    position: absolute; right: 9px; bottom: 7px;
-    font: 10px/1 ui-monospace, 'JetBrains Mono', SFMono-Regular, monospace;
-    letter-spacing: 0.05em; color: rgba(255, 255, 255, 0.26);
-    text-decoration: none; pointer-events: auto; transition: color 0.25s ease; user-select: none;
-  }
-  .credit:hover { color: #64ffda; }
 </style>
-<a class="credit" target="_blank" rel="noopener noreferrer">blobs</a>
 `;
 
 class MetaballBg extends HTMLElement {
@@ -123,9 +112,6 @@ class MetaballBg extends HTMLElement {
     const root = this.attachShadow({ mode: 'open' });
     root.innerHTML = TEMPLATE;
     this._root = root;
-    const credit = root.querySelector('.credit');
-    if (this.hasAttribute('nocredit')) credit.remove();
-    else credit.href = CREDIT_URL;
 
     this._reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
     this._visible = true;
@@ -227,7 +213,7 @@ class MetaballBg extends HTMLElement {
     // fresh canvas each setup so the renderer's alpha flag can change on rebuild
     this._canvas?.remove();
     this._canvas = document.createElement('canvas');
-    this._root.insertBefore(this._canvas, this._root.querySelector('.credit'));
+    this._root.appendChild(this._canvas);
 
     const renderer = (this._renderer = new THREE.WebGLRenderer({
       canvas: this._canvas, antialias: true, alpha: transparent, powerPreference: 'high-performance',

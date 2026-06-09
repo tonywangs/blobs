@@ -11,7 +11,7 @@
 Drop these two lines anywhere in your HTML:
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/tonywangs/blobs@v6/dist/blobs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/tonywangs/blobs@v7/dist/blobs.min.js"></script>
 <metaball-bg></metaball-bg>
 ```
 
