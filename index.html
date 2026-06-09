@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>blobs — liquid metaballs for your website, in one line</title>
-  <meta name="description" content="Drop a gorgeous animated liquid-metaball onto your website with a single line of code." />
+  <meta name="description" content="Drop a gorgeous animated liquid-metaball onto your website with a single line of code. Tweak everything, then copy." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
   <style>
@@ -18,7 +18,8 @@
 
     /* the blob — front and center, fully visible */
     .preview { flex: 1.15; min-height: 500px; border-radius: 18px; overflow: hidden;
-      border: 1px solid rgba(100, 255, 218, 0.18); box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5); }
+      border: 1px solid rgba(100, 255, 218, 0.18); box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+      position: sticky; top: 40px; align-self: flex-start; height: 88vh; max-height: 720px; }
     .preview metaball-bg { display: block; width: 100%; height: 100%; }
 
     .panel { flex: 0 0 372px; background: rgba(14, 14, 17, 0.92);
@@ -29,22 +30,40 @@
       -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
     .tag { margin: 6px 0 22px; font-size: 12.5px; line-height: 1.5; color: #8a8a8a; }
 
-    .controls { display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; }
+    .controls { display: flex; flex-direction: column; gap: 14px; margin-bottom: 16px; }
     .row { display: flex; align-items: center; gap: 12px; }
-    .label { flex: 0 0 52px; font-size: 11px; color: #9a9a9a; }
+    .label { flex: 0 0 64px; font-size: 11px; color: #9a9a9a; }
     .presets { display: flex; gap: 6px; }
     .presets button { font-family: var(--mono); font-size: 11px; padding: 5px 12px; cursor: pointer;
       background: rgba(255, 255, 255, 0.04); color: #aaa; border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 999px; transition: all 0.2s ease; }
     .presets button:hover { border-color: rgba(100, 255, 218, 0.5); color: #ddd; }
     .presets button.active { color: var(--teal); border-color: var(--teal); background: rgba(100, 255, 218, 0.08); }
-    input[type=range] { flex: 1; accent-color: var(--teal); height: 3px; cursor: pointer; }
-    .val { flex: 0 0 30px; text-align: right; font-size: 11px; color: var(--teal); }
+    input[type=range] { flex: 1; accent-color: var(--teal); height: 3px; cursor: pointer; min-width: 0; }
+    .val { flex: 0 0 34px; text-align: right; font-size: 11px; color: var(--teal); }
     .swatches { display: flex; gap: 8px; }
     input[type=color] { -webkit-appearance: none; appearance: none; width: 34px; height: 24px; padding: 0;
       border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 6px; background: none; cursor: pointer; }
     input[type=color]::-webkit-color-swatch-wrapper { padding: 2px; }
     input[type=color]::-webkit-color-swatch { border: none; border-radius: 4px; }
+    input[type=color]:disabled { opacity: 0.35; cursor: not-allowed; }
+    select { font-family: var(--mono); font-size: 11px; background: rgba(255,255,255,0.04); color: #ddd;
+      border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; padding: 4px 8px; cursor: pointer; }
+    input[type=checkbox] { accent-color: var(--teal); width: 14px; height: 14px; cursor: pointer; }
+
+    /* expand control */
+    .more-toggle { width: 100%; font-family: var(--mono); font-size: 11.5px; color: #9a9a9a; cursor: pointer;
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px;
+      padding: 9px; margin-bottom: 16px; transition: all 0.2s ease; text-align: center; letter-spacing: 0.03em; }
+    .more-toggle:hover { border-color: rgba(100,255,218,0.4); color: #ddd; }
+    .more-toggle .chev { display: inline-block; transition: transform 0.25s ease; }
+    .more-toggle[aria-expanded="true"] .chev { transform: rotate(180deg); }
+
+    .advanced { display: none; flex-direction: column; gap: 18px; margin-bottom: 16px; }
+    .advanced.open { display: flex; }
+    .group { display: flex; flex-direction: column; gap: 11px; }
+    .group-h { font-size: 10.5px; color: var(--magenta); letter-spacing: 0.05em; opacity: 0.85; }
+    .note { font-size: 10px; color: #6a6a6a; line-height: 1.5; }
 
     .snippet { border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; overflow: hidden; background: rgba(0, 0, 0, 0.45); }
     .snippet-head { display: flex; justify-content: space-between; align-items: center;
@@ -55,7 +74,7 @@
     pre { margin: 0; padding: 12px; font-family: var(--mono); font-size: 11px; line-height: 1.7;
       color: #ff9ae6; white-space: pre-wrap; word-break: break-all; }
 
-    .star { display: inline-flex; align-items: center; gap: 7px; margin-top: 20px; text-decoration: none;
+    .star { display: inline-flex; align-items: center; gap: 7px; margin-top: 18px; text-decoration: none;
       font-size: 12.5px; color: #0a0a0a; font-weight: 500;
       background: linear-gradient(45deg, var(--teal), #6fffe0); padding: 9px 16px; border-radius: 999px;
       transition: transform 0.2s ease, box-shadow 0.2s ease; }
@@ -65,7 +84,7 @@
 
     @media (max-width: 860px) {
       .app { flex-direction: column; }
-      .preview { min-height: 340px; }
+      .preview { min-height: 340px; height: 52vh; position: static; }
       .panel { flex: 1 1 auto; }
     }
   </style>
@@ -105,6 +124,49 @@
             <input type="color" id="color1" value="#64ffda" title="top color" />
             <input type="color" id="color2" value="#ff64da" title="bottom color" />
           </div>
+        </div>
+      </div>
+
+      <button class="more-toggle" id="moreToggle" aria-expanded="false">
+        <span class="chev">⌄</span> more options
+      </button>
+
+      <div class="advanced" id="advanced">
+        <div class="group">
+          <div class="group-h">// shape</div>
+          <label class="row"><span class="label">spread</span><input type="range" id="spread" min="0.05" max="0.35" step="0.01" /><span class="val" id="spreadVal"></span></label>
+          <label class="row"><span class="label">threshold</span><input type="range" id="threshold" min="10" max="120" step="1" /><span class="val" id="thresholdVal"></span></label>
+          <label class="row"><span class="label">strength</span><input type="range" id="strength" min="0.2" max="3" step="0.05" /><span class="val" id="strengthVal"></span></label>
+          <div class="row"><span class="label">quality</span><select id="quality"><option value="32">32</option><option value="48">48</option><option value="64">64</option></select></div>
+        </div>
+
+        <div class="group">
+          <div class="group-h">// material</div>
+          <div class="row"><span class="label">tint</span><input type="color" id="color" /></div>
+          <label class="row"><span class="label">metalness</span><input type="range" id="metalness" min="0" max="1" step="0.01" /><span class="val" id="metalnessVal"></span></label>
+          <label class="row"><span class="label">roughness</span><input type="range" id="roughness" min="0" max="1" step="0.01" /><span class="val" id="roughnessVal"></span></label>
+          <label class="row"><span class="label">clearcoat</span><input type="range" id="clearcoat" min="0" max="1" step="0.01" /><span class="val" id="clearcoatVal"></span></label>
+          <label class="row"><span class="label">iridescence</span><input type="range" id="iridescence" min="0" max="1" step="0.01" /><span class="val" id="iridescenceVal"></span></label>
+          <label class="row"><span class="label">glassiness</span><input type="range" id="transmission" min="0" max="1" step="0.01" /><span class="val" id="transmissionVal"></span></label>
+          <label class="row"><span class="label">reflections</span><input type="range" id="reflections" min="0" max="3" step="0.05" /><span class="val" id="reflectionsVal"></span></label>
+          <div class="row"><span class="label">emissive</span><input type="color" id="emissive" /></div>
+          <label class="row"><span class="label">glow str</span><input type="range" id="emissiveStr" min="0" max="4" step="0.05" /><span class="val" id="emissiveStrVal"></span></label>
+        </div>
+
+        <div class="group">
+          <div class="group-h">// light + bloom</div>
+          <label class="row"><span class="label">exposure</span><input type="range" id="exposure" min="0.2" max="2.5" step="0.01" /><span class="val" id="exposureVal"></span></label>
+          <label class="row"><span class="label">bloom</span><input type="range" id="bloom" min="0" max="2" step="0.01" /><span class="val" id="bloomVal"></span></label>
+          <label class="row"><span class="label">bloom cut</span><input type="range" id="bloomCutoff" min="0" max="1" step="0.01" /><span class="val" id="bloomCutoffVal"></span></label>
+          <label class="row"><span class="label">bloom rad</span><input type="range" id="bloomRadius" min="0" max="1" step="0.01" /><span class="val" id="bloomRadiusVal"></span></label>
+          <div class="row"><span class="label">solid bg</span><input type="checkbox" id="bgSolid" /><input type="color" id="background" value="#0a0a0a" /></div>
+          <p class="note">bloom & glow need a solid background — it switches on automatically when you raise them.</p>
+        </div>
+
+        <div class="group">
+          <div class="group-h">// motion</div>
+          <div class="row"><span class="label">autorotate</span><input type="checkbox" id="autorotate" /></div>
+          <label class="row"><span class="label">rot speed</span><input type="range" id="rotateSpeed" min="0" max="3" step="0.05" /><span class="val" id="rotateSpeedVal"></span></label>
         </div>
       </div>
 

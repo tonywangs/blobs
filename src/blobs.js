@@ -9,6 +9,7 @@ import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 const CREDIT_URL = 'https://blobs.vercel.app';
 
 // Same material/bloom recipe as the standalone showcase, exposed as presets.
+// Any of these fields can be overridden per-instance with the matching attribute.
 const PRESETS = {
   chrome: {
     color: '#eef2f5', metalness: 1.0, roughness: 0.22, clearcoat: 1.0, clearcoatRoughness: 0.12,
@@ -81,6 +82,8 @@ function makeEnvTexture(cA, cB) {
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const numAttr = (v, d) => { const n = parseFloat(v); return Number.isFinite(n) ? n : d; };
 
+const CAM_Z = 5.6; // pulled back so the blob always has margin and never clips
+
 const TEMPLATE = `
 <style>
   :host { display: block; position: relative; width: 100%; height: 100%; min-height: 280px; overflow: hidden; }
@@ -94,12 +97,24 @@ const TEMPLATE = `
   }
   .credit:hover { color: #64ffda; }
 </style>
-<canvas></canvas>
 <a class="credit" target="_blank" rel="noopener noreferrer">blobs</a>
 `;
 
 class MetaballBg extends HTMLElement {
-  static get observedAttributes() { return ['preset', 'blobs', 'speed', 'bg', 'quality', 'color1', 'color2']; }
+  static get observedAttributes() {
+    return [
+      'preset', 'blobs', 'speed', 'bg', 'quality', 'color1', 'color2',
+      // material overrides
+      'color', 'metalness', 'roughness', 'clearcoat', 'iridescence', 'transmission',
+      'reflections', 'emissive', 'emissive-str',
+      // geometry
+      'spread', 'threshold', 'strength',
+      // tone + bloom
+      'exposure', 'bloom', 'bloom-cutoff', 'bloom-radius',
+      // motion
+      'autorotate', 'rotate-speed',
+    ];
+  }
 
   connectedCallback() {
     if (this._ready) return;
@@ -107,7 +122,7 @@ class MetaballBg extends HTMLElement {
 
     const root = this.attachShadow({ mode: 'open' });
     root.innerHTML = TEMPLATE;
-    this._canvas = root.querySelector('canvas');
+    this._root = root;
     const credit = root.querySelector('.credit');
     if (this.hasAttribute('nocredit')) credit.remove();
     else credit.href = CREDIT_URL;
@@ -115,6 +130,7 @@ class MetaballBg extends HTMLElement {
     this._reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
     this._visible = true;
     this._raf = 0;
+    this._angle = 0;
 
     this._setup();
 
@@ -140,6 +156,17 @@ class MetaballBg extends HTMLElement {
 
   attributeChangedCallback(name) {
     if (!this._ready) return;
+    // Switching the background between transparent and opaque flips renderer alpha
+    // and whether the bloom composer exists — both are fixed at construction, so a
+    // full rebuild is required. (Happens on preset swaps and bg edits, never mid-drag.)
+    const transparent = this._config().bg === 'transparent';
+    if (transparent !== this._transparent) {
+      this._stop();
+      this._dispose();
+      this._setup();
+      if (this._visible && !document.hidden) this._start();
+      return;
+    }
     if (name === 'quality') { this._buildBlobs(); return; }
     this._applyConfig();
     if (name === 'color1' || name === 'color2') this._buildEnv();
@@ -147,19 +174,46 @@ class MetaballBg extends HTMLElement {
 
   _config() {
     const presetName = (this.getAttribute('preset') || 'chrome').toLowerCase();
-    const preset = PRESETS[presetName] || PRESETS.chrome;
+    const p = PRESETS[presetName] || PRESETS.chrome;
     const q = parseInt(this.getAttribute('quality'), 10);
+    const num = (a, d) => numAttr(this.getAttribute(a), d);
+    const col = (a, d) => this.getAttribute(a) || d;
     return {
-      preset,
+      // geometry / motion
       blobs: clamp(parseInt(this.getAttribute('blobs'), 10) || 9, 1, 16),
-      speed: numAttr(this.getAttribute('speed'), 1.0),
+      speed: num('speed', 1.0),
+      spread: num('spread', 0.15),
+      isolation: num('threshold', 45),
+      strength: num('strength', 1.5),
+      subtract: 12,
+      quality: [32, 48, 64].includes(q) ? q : 64,
+      autorotate: this.hasAttribute('autorotate') && this.getAttribute('autorotate') !== 'false',
+      rotateSpeed: num('rotate-speed', 0.6),
+      // environment palette
+      color1: col('color1', '#64ffda'),
+      color2: col('color2', '#ff64da'),
+      // material — preset default, per-attribute override
+      color: col('color', p.color),
+      metalness: num('metalness', p.metalness),
+      roughness: num('roughness', p.roughness),
+      clearcoat: num('clearcoat', p.clearcoat),
+      clearcoatRoughness: p.clearcoatRoughness,
+      iridescence: num('iridescence', p.iridescence),
+      iridescenceIOR: p.iridescenceIOR,
+      transmission: num('transmission', p.transmission),
+      ior: p.ior,
+      thickness: p.thickness,
+      envMapIntensity: num('reflections', p.envMapIntensity),
+      emissive: col('emissive', p.emissive),
+      emissiveIntensity: num('emissive-str', p.emissiveIntensity),
+      // tone + bloom
+      exposure: num('exposure', 1.12),
+      bloomStrength: num('bloom', p.bloomStrength),
+      bloomThreshold: num('bloom-cutoff', p.bloomThreshold),
+      bloomRadius: num('bloom-radius', p.bloomRadius),
       // transmissive presets (glass/jelly) need an opaque backdrop to refract, or they
       // blow out to white; reflective chrome stays transparent so it floats over a page.
-      bg: this.getAttribute('bg') || (preset.transmission > 0 ? '#0a0a0a' : 'transparent'),
-      quality: [32, 48, 64].includes(q) ? q : 64,
-      color1: this.getAttribute('color1') || '#64ffda',
-      color2: this.getAttribute('color2') || '#ff64da',
-      spread: 0.15, isolation: 45, strength: 1.5, subtract: 12,
+      bg: this.getAttribute('bg') || (p.transmission > 0 ? '#0a0a0a' : 'transparent'),
     };
   }
 
@@ -168,6 +222,12 @@ class MetaballBg extends HTMLElement {
     const h = this.clientHeight || 1;
     this._cfg = this._config();
     const transparent = this._cfg.bg === 'transparent';
+    this._transparent = transparent;
+
+    // fresh canvas each setup so the renderer's alpha flag can change on rebuild
+    this._canvas?.remove();
+    this._canvas = document.createElement('canvas');
+    this._root.insertBefore(this._canvas, this._root.querySelector('.credit'));
 
     const renderer = (this._renderer = new THREE.WebGLRenderer({
       canvas: this._canvas, antialias: true, alpha: transparent, powerPreference: 'high-performance',
@@ -175,24 +235,24 @@ class MetaballBg extends HTMLElement {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     renderer.setSize(w, h, false);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.12;
-    this._transparent = transparent;
+    renderer.toneMappingExposure = this._cfg.exposure;
     if (transparent) renderer.setClearColor(0x000000, 0);
 
     this._scene = new THREE.Scene();
     this._camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 100);
-    this._camera.position.set(0, 0, 5.6); // pulled back so the blob always has margin and never clips
+    this._camera.position.set(0, 0, CAM_Z);
 
     this._buildEnv();
 
     this._material = new THREE.MeshPhysicalMaterial({ iridescenceThicknessRange: [100, 400] });
 
     this._buildBlobs();
-    this._applyConfig();
 
     // Bloom can't preserve a transparent background (the composer re-fills it opaque),
     // so it's only used for solid-bg embeds. Transparent embeds render directly — and
     // since transparent is the default, that's the common path.
+    this._composer = null;
+    this._bloom = null;
     if (!transparent) {
       this._composer = new EffectComposer(renderer);
       this._composer.addPass(new RenderPass(this._scene, this._camera));
@@ -201,6 +261,8 @@ class MetaballBg extends HTMLElement {
       this._composer.addPass(new OutputPass());
       this._composer.setSize(w, h);
     }
+
+    this._applyConfig();
 
     this._clock = new THREE.Clock();
     this._t = 0;
@@ -227,7 +289,7 @@ class MetaballBg extends HTMLElement {
   }
 
   _buildBlobs() {
-    const cfg = this._config();
+    const cfg = (this._cfg = this._config());
     if (this._mc) { this._scene.remove(this._mc); this._mc.geometry.dispose(); }
     this._mc = new MarchingCubes(cfg.quality, this._material, false, false, 200000);
     this._mc.scale.setScalar(1.6);
@@ -237,20 +299,21 @@ class MetaballBg extends HTMLElement {
 
   _applyConfig() {
     const cfg = (this._cfg = this._config());
-    const p = cfg.preset;
     const m = this._material;
-    m.color.set(p.color);
-    m.metalness = p.metalness; m.roughness = p.roughness;
-    m.clearcoat = p.clearcoat; m.clearcoatRoughness = p.clearcoatRoughness;
-    m.iridescence = p.iridescence; m.iridescenceIOR = p.iridescenceIOR;
-    m.transmission = p.transmission; m.ior = p.ior; m.thickness = p.thickness;
-    m.envMapIntensity = p.envMapIntensity;
-    m.emissive.set(p.emissive); m.emissiveIntensity = p.emissiveIntensity;
+    m.color.set(cfg.color);
+    m.metalness = cfg.metalness; m.roughness = cfg.roughness;
+    m.clearcoat = cfg.clearcoat; m.clearcoatRoughness = cfg.clearcoatRoughness;
+    m.iridescence = cfg.iridescence; m.iridescenceIOR = cfg.iridescenceIOR;
+    m.transmission = cfg.transmission; m.ior = cfg.ior; m.thickness = cfg.thickness;
+    m.envMapIntensity = cfg.envMapIntensity;
+    m.emissive.set(cfg.emissive); m.emissiveIntensity = cfg.emissiveIntensity;
     m.needsUpdate = true;
+    if (this._mc) this._mc.isolation = cfg.isolation;
+    if (this._renderer) this._renderer.toneMappingExposure = cfg.exposure;
     if (this._bloom) {
-      this._bloom.strength = p.bloomStrength;
-      this._bloom.radius = p.bloomRadius;
-      this._bloom.threshold = p.bloomThreshold;
+      this._bloom.strength = cfg.bloomStrength;
+      this._bloom.radius = cfg.bloomRadius;
+      this._bloom.threshold = cfg.bloomThreshold;
     }
     if (this._scene) this._scene.background = cfg.bg === 'transparent' ? null : new THREE.Color(cfg.bg);
     if (this._reduced) this._render();
@@ -278,7 +341,13 @@ class MetaballBg extends HTMLElement {
     this._clock.start(); // reset delta so a long pause doesn't cause a time jump
     const loop = () => {
       this._raf = requestAnimationFrame(loop);
-      this._t += this._clock.getDelta() * this._cfg.speed;
+      const dt = this._clock.getDelta();
+      this._t += dt * this._cfg.speed;
+      if (this._cfg.autorotate) {
+        this._angle += dt * this._cfg.rotateSpeed;
+        this._camera.position.set(Math.sin(this._angle) * CAM_Z, 0, Math.cos(this._angle) * CAM_Z);
+        this._camera.lookAt(0, 0, 0);
+      }
       this._update(this._t);
       this._render();
     };
