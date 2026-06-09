@@ -19,11 +19,17 @@
     /* the blob — front and center, fully visible */
     .preview { flex: 1.15; min-height: 500px; border-radius: 18px; overflow: hidden;
       border: 1px solid rgba(100, 255, 218, 0.18); box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
-      position: sticky; top: 40px; align-self: flex-start; height: 88vh; max-height: 720px; }
+      position: sticky; top: 40px; align-self: flex-start; height: min(88vh, 720px); }
     .preview metaball-bg { display: block; width: 100%; height: 100%; }
 
+    /* panel never grows past the preview's height — the controls scroll inside it instead */
     .panel { flex: 0 0 372px; background: rgba(14, 14, 17, 0.92);
-      border: 1px solid rgba(100, 255, 218, 0.18); border-radius: 16px; padding: 26px 24px 20px; }
+      border: 1px solid rgba(100, 255, 218, 0.18); border-radius: 16px; padding: 26px 24px 0;
+      align-self: flex-start; max-height: min(88vh, 720px); overflow-y: auto;
+      scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.14) transparent; }
+    .panel::-webkit-scrollbar { width: 8px; }
+    .panel::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 999px; }
+    .panel::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.22); }
 
     h1 { margin: 0; font-size: 38px; font-weight: 700; letter-spacing: -0.02em;
       background: linear-gradient(45deg, var(--teal), var(--magenta));
@@ -65,6 +71,9 @@
     .group-h { font-size: 10.5px; color: var(--magenta); letter-spacing: 0.05em; opacity: 0.85; }
     .note { font-size: 10px; color: #6a6a6a; line-height: 1.5; }
 
+    /* the copy snippet stays pinned to the bottom of the panel while the controls scroll behind it */
+    .panel-foot { position: sticky; bottom: 0; margin: 14px -24px 0; padding: 14px 24px 16px;
+      background: #0d0d10; border-top: 1px solid rgba(255, 255, 255, 0.07); }
     .snippet { border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; overflow: hidden; background: rgba(0, 0, 0, 0.45); }
     .snippet-head { display: flex; justify-content: space-between; align-items: center;
       padding: 7px 12px; font-size: 10.5px; color: #777; border-bottom: 1px solid rgba(255, 255, 255, 0.07); }
@@ -79,7 +88,7 @@
       background: linear-gradient(45deg, var(--teal), #6fffe0); padding: 9px 16px; border-radius: 999px;
       transition: transform 0.2s ease, box-shadow 0.2s ease; }
     .star:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(100, 255, 218, 0.25); }
-    .howto { margin: 16px 0 0; font-size: 10.5px; line-height: 1.6; color: #6a6a6a; }
+    .howto { margin: 16px 0 22px; font-size: 10.5px; line-height: 1.6; color: #6a6a6a; }
     .howto code { color: var(--teal); }
 
     @media (max-width: 860px) {
@@ -170,9 +179,11 @@
         </div>
       </div>
 
-      <div class="snippet">
-        <div class="snippet-head"><span>// paste this into your site</span><button id="copy">copy</button></div>
-        <pre id="code"></pre>
+      <div class="panel-foot">
+        <div class="snippet">
+          <div class="snippet-head"><span>// paste this into your site</span><button id="copy">copy</button></div>
+          <pre id="code"></pre>
+        </div>
       </div>
 
       <a class="star" id="star" href="https://github.com/tonywangs/blobs" target="_blank" rel="noopener noreferrer">★ star on github</a>
